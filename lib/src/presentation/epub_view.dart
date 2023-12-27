@@ -401,6 +401,7 @@ class _EpubViewState extends State<EpubView> {
     //         _onLinkPressed,
     //       );
     // },
+      isRightSwipe:true,
       children: [
       for (var i = 0; i < _paragraphs.length; i++) widget.builders.chapterBuilder(
         context,
