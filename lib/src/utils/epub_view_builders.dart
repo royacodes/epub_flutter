@@ -23,6 +23,7 @@ typedef ChaptersBuilder = Widget Function(
   EpubBook document,
   List<EpubChapter> chapters,
   List<Paragraph> paragraphs,
+  List<Line> lines,
   int index,
   int chapterIndex,
   int paragraphIndex,
@@ -71,17 +72,16 @@ class DefaultBuilderOptions {
   final TextStyle textStyle;
   final Color backgroundColor;
 
-  const DefaultBuilderOptions({
-    this.loaderSwitchDuration = const Duration(seconds: 1),
-    this.transitionBuilder = DefaultBuilderOptions._transitionBuilder,
-    this.chapterPadding = const EdgeInsets.all(8),
-    this.paragraphPadding = const EdgeInsets.symmetric(horizontal: 16),
-    this.textStyle = const TextStyle(
-      height: 1.25,
-      fontSize: 16,
-    ),
-    this.backgroundColor = Colors.white
-  });
+  const DefaultBuilderOptions(
+      {this.loaderSwitchDuration = const Duration(seconds: 1),
+      this.transitionBuilder = DefaultBuilderOptions._transitionBuilder,
+      this.chapterPadding = const EdgeInsets.all(8),
+      this.paragraphPadding = const EdgeInsets.symmetric(horizontal: 16),
+      this.textStyle = const TextStyle(
+        height: 1.25,
+        fontSize: 16,
+      ),
+      this.backgroundColor = Colors.white});
 
   static Widget _transitionBuilder(Widget child, Animation<double> animation) =>
       FadeTransition(opacity: animation, child: child);

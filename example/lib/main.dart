@@ -53,18 +53,18 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) => MaterialApp(
-    title: 'Epub demo',
-    theme: ThemeData(
-      primarySwatch: Colors.blue,
-      brightness: Brightness.light,
-    ),
-    darkTheme: ThemeData(
-      primarySwatch: Colors.blue,
-      brightness: Brightness.dark,
-    ),
-    debugShowCheckedModeBanner: false,
-    home: const MyHomePage(),
-  );
+        title: 'Epub demo',
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
+          brightness: Brightness.light,
+        ),
+        darkTheme: ThemeData(
+          primarySwatch: Colors.blue,
+          brightness: Brightness.dark,
+        ),
+        debugShowCheckedModeBanner: false,
+        home: const MyHomePage(),
+      );
 }
 
 class MyHomePage extends StatefulWidget {
@@ -81,7 +81,8 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     _epubReaderController = EpubController(
       document:
-      EpubDocument.openAsset('assets/book-fa.epub'),
+          // EpubDocument.openAsset('assets/New-Findings-on-Shirdi-Sai-Baba.epub'),
+          EpubDocument.openAsset('assets/book-fa.epub'),
       // EpubDocument.openUrl('https://www.gutenberg.org/ebooks/11.epub.images'),
       // EpubDocument.openAsset('assets/New-Findings-on-Shirdi-Sai-Baba.epub'),
       // epubCfi:
@@ -92,7 +93,6 @@ class _MyHomePageState extends State<MyHomePage> {
     super.initState();
   }
 
-
   @override
   void dispose() {
     _epubReaderController.dispose();
@@ -101,38 +101,35 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(
-      title: EpubViewActualChapter(
-        controller: _epubReaderController,
-        builder: (chapterValue) => Text(
-          chapterValue?.chapter?.Title?.replaceAll('\n', '').trim() ?? '',
-          textAlign: TextAlign.start,
+        appBar: AppBar(
+          title: EpubViewActualChapter(
+            controller: _epubReaderController,
+            builder: (chapterValue) => Text(
+              chapterValue?.chapter?.Title?.replaceAll('\n', '').trim() ?? '',
+              textAlign: TextAlign.start,
+            ),
+          ),
+          actions: <Widget>[
+            IconButton(
+              icon: const Icon(Icons.save_alt),
+              color: Colors.white,
+              onPressed: () => _showCurrentEpubCfi(context),
+            ),
+          ],
         ),
-      ),
-      actions: <Widget>[
-        IconButton(
-          icon: const Icon(Icons.save_alt),
-          color: Colors.white,
-          onPressed: () => _showCurrentEpubCfi(context),
+        drawer: Drawer(
+          child: EpubViewTableOfContents(controller: _epubReaderController),
         ),
-      ],
-    ),
-    drawer: Drawer(
-      child: EpubViewTableOfContents(controller: _epubReaderController),
-    ),
-    body: EpubView(
-      builders: EpubViewBuilders<DefaultBuilderOptions>(
-        options: const DefaultBuilderOptions(
-            textStyle: TextStyle(fontSize: 22)
+        body: EpubView(
+          builders: EpubViewBuilders<DefaultBuilderOptions>(
+            options:
+                const DefaultBuilderOptions(textStyle: TextStyle(fontSize: 22)),
+            chapterDividerBuilder: (_) => const Divider(),
+          ),
+          controller: _epubReaderController,
+          onDocumentLoaded: (doc) {},
         ),
-        chapterDividerBuilder: (_) => const Divider(),
-      ),
-      controller: _epubReaderController,
-      onDocumentLoaded: (doc){
-
-      },
-    ),
-  );
+      );
 
   void _showCurrentEpubCfi(context) {
     final cfi = _epubReaderController.generateEpubCfi();
