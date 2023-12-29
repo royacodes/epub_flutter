@@ -35,6 +35,51 @@ List<dom.Element> _removeAllDiv(List<dom.Element> elements) {
 
   return result;
 }
+List<dom.Element> splitElementIntoPages(
+    List<dom.Element> elements, int targetWordCountPerPage) {
+  final List<dom.Element> result = [];
+  int currentWordCount = 0;
+  List<dom.Element> currentPage = [];
+
+  for(var element in elements) {
+    List<String> words = element.text.split(RegExp(r'\s+'));
+    List<String> actualWords = words.where((word) => word.isNotEmpty).toList();
+    if(actualWords.length <= targetWordCountPerPage - currentWordCount) {
+      currentWordCount = actualWords.length + currentWordCount;
+      result.add(element);
+    } else {
+      break;
+    }
+  }
+return result;
+
+
+
+}
+
+// ParsePagesResult parsePages(
+//     List<EpubChapter> chapters,
+//     ) {
+//   final List<int> chapterIndexes = [];
+//   String? filename = '';
+//
+//   final pages = chapters.fold<List<Page>>(
+//       [],
+//           (previousValue, element) {
+//             List<dom.Element> elmList = [];
+//             if(filename != element.ContentFileName) {
+//               filename = element.ContentFileName;
+//               final document = EpubCfiReader().chapterDocument(element);
+//
+//
+//             }
+//
+//
+//           });
+//   return ParsePagesResult(pages, chapterIndexes);
+//
+//
+// }
 
 ParseLinesResult parseLines(
   List<EpubChapter> chapters,
@@ -42,16 +87,19 @@ ParseLinesResult parseLines(
 ) {
   String? filename = '';
   final List<int> chapterIndexes = [];
+  final c = content!;
   final lines = chapters.fold<List<Line>>(
     [],
     (acc, next) {
       List<dom.Element> elmList = [];
+      List<dom.Element> elementList = [];
       if (filename != next.ContentFileName) {
         filename = next.ContentFileName;
         final document = EpubCfiReader().chapterDocument(next);
         if (document != null) {
           final result = convertDocumentToElements(document);
           elmList = _removeAllDiv(result);
+          elementList = splitElementIntoPages(elmList, 200);
         }
       }
 
@@ -146,5 +194,12 @@ class ParseLinesResult {
   ParseLinesResult(this.lines, this.chapterIndexes);
 
   final List<Line> lines;
+  final List<int> chapterIndexes;
+}
+
+class ParsePagesResult {
+  ParsePagesResult(this.pages, this.chapterIndexes);
+
+  final List<Page> pages;
   final List<int> chapterIndexes;
 }

@@ -306,7 +306,35 @@ class _EpubViewState extends State<EpubView> {
 
     return posIndex;
   }
+  void recalculateWordsPerPage() {
+    final defaultBuilder = widget.builders as EpubViewBuilders<DefaultBuilderOptions>;
+    final options = defaultBuilder.options;
+    // Recalculate the number of words per page based on the updated font size
+    double screenWidth = MediaQuery.of(context).size.width;
 
+    // Create a TextPainter to measure the width of a single word
+    final textPainter = TextPainter(
+      text: TextSpan(
+        text: 'words',  // Use a sample word
+        style: TextStyle(fontSize: options.textStyle.fontSize),
+      ),
+      textDirection: TextDirection.ltr,
+    );
+
+    // Layout the text to calculate its width
+    textPainter.layout(maxWidth: screenWidth);
+
+    // Calculate the number of words per line
+    double wordsPerLine = (screenWidth / textPainter.width).floor().toDouble();
+    // Calculate the number of lines per page
+    double screenHeight = MediaQuery.of(context).size.height;
+    final hw = screenHeight/screenWidth;
+    linesPerPage = ((screenHeight / options.textStyle.fontSize!)/hw).floor().toDouble();
+
+    // Calculate the number of words per page
+    final wordsPerPage = (wordsPerLine * linesPerPage).floor();
+    final words = wordsPerPage;
+  }
   static Widget _chapterDividerBuilder(EpubChapter chapter) => Container(
         height: 56,
         width: double.infinity,
@@ -344,45 +372,47 @@ class _EpubViewState extends State<EpubView> {
     }
     final defaultBuilder = builders as EpubViewBuilders<DefaultBuilderOptions>;
     final options = defaultBuilder.options;
-    return HtmlWidget(lines[index].lineString);
-    // return Container(
-    //   color: options.backgroundColor,
-    //   child: SelectionArea(
-    //     onSelectionChanged: (value) {
-    //       print('selected text: $value');
-    //     },
-    //     child: Html(
-    //       data: paragraphs[index].element.outerHtml,
-    //       onLinkTap: (href, _, __) => onExternalLinkPressed(href!),
-    //       style: {
-    //         'html': Style(
-    //           padding: HtmlPaddings.only(
-    //             top: (options.paragraphPadding as EdgeInsets?)?.top,
-    //             right: (options.paragraphPadding as EdgeInsets?)?.right,
-    //             bottom: (options.paragraphPadding as EdgeInsets?)?.bottom,
-    //             left: (options.paragraphPadding as EdgeInsets?)?.left,
-    //           ),
-    //         ).merge(Style.fromTextStyle(options.textStyle)),
-    //       },
-    //       extensions: [
-    //         TagExtension(
-    //           tagsToExtend: {"img"},
-    //           builder: (imageContext) {
-    //             final url =
-    //                 imageContext.attributes['src']!.replaceAll('../', '');
-    //             final content = Uint8List.fromList(
-    //                 document.Content!.Images![url]!.Content!);
-    //             return Image(
-    //               image: MemoryImage(content),
-    //             );
-    //           },
-    //         ),
-    //       ],
-    //     ),
-    //   ),
-    // );
-    //   ],
-    // );
+    // return HtmlWidget(lines[index].lineString);
+    return Container(
+      color: options.backgroundColor,
+      child: SelectionArea(
+        onSelectionChanged: (value) {
+          print('selected text: $value');
+        },
+        child: Directionality(
+          textDirection: TextDirection.rtl,
+          child: Html(
+            data: paragraphs[index].element.outerHtml,
+            onLinkTap: (href, _, __) => onExternalLinkPressed(href!),
+            style: {
+              'html': Style(
+                padding: HtmlPaddings.only(
+                  top: (options.paragraphPadding as EdgeInsets?)?.top,
+                  right: (options.paragraphPadding as EdgeInsets?)?.right,
+                  bottom: (options.paragraphPadding as EdgeInsets?)?.bottom,
+                  left: (options.paragraphPadding as EdgeInsets?)?.left,
+                ),
+              ).merge(Style.fromTextStyle(options.textStyle)),
+            },
+            extensions: [
+              TagExtension(
+                tagsToExtend: {"img"},
+                builder: (imageContext) {
+                  final url =
+                      imageContext.attributes['src']!.replaceAll('../', '');
+                  final content = Uint8List.fromList(
+                      document.Content!.Images![url]!.Content!);
+                  return Image(
+                    image: MemoryImage(content),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
   }
 
   num linesPerPage = 20;
@@ -401,6 +431,7 @@ class _EpubViewState extends State<EpubView> {
     BuildContext context,
   ) {
     num lines = calculateLinesPerPage() ?? 0;
+    recalculateWordsPerPage();
     // return ListView.builder(
     return PageFlipWidget(
       // itemCount: _paragraphs.length,
