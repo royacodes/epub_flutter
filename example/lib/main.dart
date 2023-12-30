@@ -124,7 +124,7 @@ class _MyHomePageState extends State<MyHomePage> {
         EpubView(
           builders: EpubViewBuilders<DefaultBuilderOptions>(
             options:
-                const DefaultBuilderOptions(textStyle: TextStyle(fontSize: 18)),
+                const DefaultBuilderOptions(textStyle: TextStyle(fontSize: 22)),
             chapterDividerBuilder: (_) => const Divider(),
           ),
           controller: _epubReaderController,

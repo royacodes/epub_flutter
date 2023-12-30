@@ -375,7 +375,7 @@ class _EpubViewState extends State<EpubView> {
       return Container();
     }
     String htmlData = '';
-    for(int i = 0; i< pages.length; i++) {
+    for(int i = 0; i< pages[index].elements.length; i++) {
       htmlData = htmlData+ pages[index].elements[i].outerHtml;
     }
     final defaultBuilder = builders as EpubViewBuilders<DefaultBuilderOptions>;

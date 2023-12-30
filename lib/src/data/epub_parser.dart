@@ -70,8 +70,10 @@ List<List<dom.Element>> splitElementIntoPages(
         words = secondParagraphElement.text.split(RegExp(r'\s+'));
         actualWords = words.where((word) => word.isNotEmpty).toList();
         result = [];
-        result.add(secondParagraphElement);
-        currentWordCount = actualWords.length;
+        currentWordCount = 0;
+        elements[i] = secondParagraphElement;
+        i--;
+
       }
 
 
