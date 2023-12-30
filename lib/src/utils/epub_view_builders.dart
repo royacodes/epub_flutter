@@ -23,7 +23,7 @@ typedef ChaptersBuilder = Widget Function(
   EpubBook document,
   List<EpubChapter> chapters,
   List<Paragraph> paragraphs,
-  List<Line> lines,
+  List<PageModel> pages,
   int index,
   int chapterIndex,
   int paragraphIndex,

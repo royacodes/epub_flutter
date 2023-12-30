@@ -15,6 +15,8 @@ import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart
 import 'package:page_flip/page_flip.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
+import '../data/models/page_model.dart';
+
 export 'package:epubx/epubx.dart' hide Image;
 
 part '../epub_controller.dart';
@@ -63,7 +65,8 @@ class _EpubViewState extends State<EpubView> {
   ItemPositionsListener? _itemPositionListener;
   List<EpubChapter> _chapters = [];
   List<Paragraph> _paragraphs = [];
-  List<Line> _lines = [];
+  // List<Line> _lines = [];
+  List<PageModel> _pages = [];
   EpubCfiReader? _epubCfiReader;
   EpubChapterViewValue? _currentValue;
   final _chapterIndexes = <int>[];
@@ -109,10 +112,10 @@ class _EpubViewState extends State<EpubView> {
     final parseParagraphsResult =
         parseParagraphs(_chapters, _controller._document!.Content);
     _paragraphs = parseParagraphsResult.flatParagraphs;
-    final parseLineResult =
-        parseLines(_chapters, _controller._document!.Content);
-    _lines = parseLineResult.lines;
-    _chapterIndexes.addAll(parseLineResult.chapterIndexes);
+    final parsePageResult =
+        parsePages(_chapters, _controller._document!.Content, recalculateWordsPerPage());
+    _pages = parsePageResult.pages;
+    _chapterIndexes.addAll(parsePageResult.chapterIndexes);
 
     _epubCfiReader = EpubCfiReader.parser(
       cfiInput: _controller.epubCfi,
@@ -306,7 +309,7 @@ class _EpubViewState extends State<EpubView> {
 
     return posIndex;
   }
-  void recalculateWordsPerPage() {
+  int recalculateWordsPerPage() {
     final defaultBuilder = widget.builders as EpubViewBuilders<DefaultBuilderOptions>;
     final options = defaultBuilder.options;
     // Recalculate the number of words per page based on the updated font size
@@ -334,6 +337,7 @@ class _EpubViewState extends State<EpubView> {
     // Calculate the number of words per page
     final wordsPerPage = (wordsPerLine * linesPerPage).floor();
     final words = wordsPerPage;
+    return words;
   }
   static Widget _chapterDividerBuilder(EpubChapter chapter) => Container(
         height: 56,
@@ -358,7 +362,7 @@ class _EpubViewState extends State<EpubView> {
     EpubBook document,
     List<EpubChapter> chapters,
     List<Paragraph> paragraphs,
-    List<Line> lines,
+    List<PageModel> pages,
     int index,
     int chapterIndex,
     int paragraphIndex,
@@ -367,8 +371,12 @@ class _EpubViewState extends State<EpubView> {
     if (paragraphs.isEmpty) {
       return Container();
     }
-    if (lines.isEmpty) {
+    if (pages.isEmpty) {
       return Container();
+    }
+    String htmlData = '';
+    for(int i = 0; i< pages.length; i++) {
+      htmlData = htmlData+ pages[index].elements[i].outerHtml;
     }
     final defaultBuilder = builders as EpubViewBuilders<DefaultBuilderOptions>;
     final options = defaultBuilder.options;
@@ -382,7 +390,7 @@ class _EpubViewState extends State<EpubView> {
         child: Directionality(
           textDirection: TextDirection.rtl,
           child: Html(
-            data: paragraphs[index].element.outerHtml,
+            data: htmlData,
             onLinkTap: (href, _, __) => onExternalLinkPressed(href!),
             style: {
               'html': Style(
@@ -451,14 +459,14 @@ class _EpubViewState extends State<EpubView> {
       // },
       isRightSwipe: true,
       children: [
-        for (var i = 0; i < _lines.length; i++)
+        for (var i = 0; i < _pages.length; i++)
           widget.builders.chapterBuilder(
             context,
             widget.builders,
             widget.controller._document!,
             _chapters,
             _paragraphs,
-            _lines,
+            _pages,
             i,
             _getChapterIndexBy(positionIndex: i),
             _getParagraphIndexBy(positionIndex: i),
