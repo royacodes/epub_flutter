@@ -10,10 +10,12 @@ import 'package:epub_flutter/src/data/models/chapter_view_value.dart';
 import 'package:epub_flutter/src/data/models/line.dart';
 import 'package:epub_flutter/src/data/models/paragraph.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
 import 'package:page_flip/page_flip.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
+import 'package:selectable/selectable.dart' as selectable;
 
 import '../data/models/page_model.dart';
 
@@ -328,11 +330,11 @@ class _EpubViewState extends State<EpubView> {
     textPainter.layout(maxWidth: screenWidth);
 
     // Calculate the number of words per line
-    double wordsPerLine = (screenWidth / textPainter.width).floor().toDouble();
+    double wordsPerLine = (screenWidth / textPainter.width).toDouble();
     // Calculate the number of lines per page
     double screenHeight = MediaQuery.of(context).size.height;
     final hw = screenHeight/screenWidth;
-    linesPerPage = ((screenHeight / options.textStyle.fontSize!)/hw).floor().toDouble();
+    linesPerPage = ((screenHeight / options.textStyle.fontSize!)/hw).toDouble();
 
     // Calculate the number of words per page
     final wordsPerPage = (wordsPerLine * linesPerPage).floor();
@@ -383,16 +385,43 @@ class _EpubViewState extends State<EpubView> {
     // return HtmlWidget(lines[index].lineString);
     return Container(
       color: options.backgroundColor,
-      child: SelectionArea(
-        onSelectionChanged: (value) {
-          print('selected text: $value');
-        },
+      child: selectable.Selectable(
+        selectWordOnDoubleTap: true,
+          popupMenuItems: [
+      // selectable.SelectableMenuItem(type: selectable.SelectableMenuItemType.copy),
+      selectable.SelectableMenuItem(
+          title: '',
+        icon:Icons.add,
+          isEnabled: (controller) => controller!.isTextSelected,
+          handler: (controller) {
+    showDialog<void>(
+    context: context,
+    barrierDismissible: true,
+    builder: (builder) {
+    return AlertDialog(
+    contentPadding: EdgeInsets.zero,
+    content: Container(
+    padding: const EdgeInsets.all(16),
+    child: Text(controller!.getSelection()!.text!),
+    ),
+    shape: RoundedRectangleBorder(
+    borderRadius: BorderRadius.circular(8)),
+    );
+    },
+    );
+    return true;
+    },
+    ),
+    ],
         child: Directionality(
           textDirection: TextDirection.rtl,
-          child: Html(
+          child:
+          Html(
             data: htmlData,
+            shrinkWrap: true,
             onLinkTap: (href, _, __) => onExternalLinkPressed(href!),
             style: {
+              // 'p': Style(padding:  HtmlPaddings.symmetric(vertical: 0)),
               'html': Style(
                 padding: HtmlPaddings.only(
                   top: (options.paragraphPadding as EdgeInsets?)?.top,
@@ -400,8 +429,10 @@ class _EpubViewState extends State<EpubView> {
                   bottom: (options.paragraphPadding as EdgeInsets?)?.bottom,
                   left: (options.paragraphPadding as EdgeInsets?)?.left,
                 ),
+                textAlign: TextAlign.justify,
               ).merge(Style.fromTextStyle(options.textStyle)),
             },
+
             extensions: [
               TagExtension(
                 tagsToExtend: {"img"},

@@ -20,6 +20,7 @@ dependencies:
   http: ^1.1.2
   page_flip: ^0.2.3
   flutter_widget_from_html_core: ^0.14.9
+  selectable: ^0.3.0
 
 dev_dependencies:
   flutter_test:
