@@ -7,11 +7,10 @@ import 'package:epub_flutter/src/data/epub_cfi_reader.dart';
 import 'package:epub_flutter/src/data/epub_parser.dart';
 import 'package:epub_flutter/src/data/models/chapter.dart';
 import 'package:epub_flutter/src/data/models/chapter_view_value.dart';
-import 'package:epub_flutter/src/data/models/line.dart';
 import 'package:epub_flutter/src/data/models/paragraph.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
-import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
+import 'package:html_unescape/html_unescape.dart';
 import 'package:page_flip/page_flip.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
@@ -20,6 +19,7 @@ import '../data/models/page_model.dart';
 export 'package:epubx/epubx.dart' hide Image;
 
 part '../epub_controller.dart';
+
 part '../utils/epub_view_builders.dart';
 
 const _minTrailingEdge = 0.55;
@@ -65,6 +65,7 @@ class _EpubViewState extends State<EpubView> {
   ItemPositionsListener? _itemPositionListener;
   List<EpubChapter> _chapters = [];
   List<Paragraph> _paragraphs = [];
+
   // List<Line> _lines = [];
   List<PageModel> _pages = [];
   EpubCfiReader? _epubCfiReader;
@@ -112,8 +113,8 @@ class _EpubViewState extends State<EpubView> {
     final parseParagraphsResult =
         parseParagraphs(_chapters, _controller._document!.Content);
     _paragraphs = parseParagraphsResult.flatParagraphs;
-    final parsePageResult =
-        parsePages(_chapters, _controller._document!.Content, recalculateWordsPerPage());
+    final parsePageResult = parsePages(
+        _chapters, _controller._document!.Content, recalculateWordsPerPage());
     _pages = parsePageResult.pages;
     _chapterIndexes.addAll(parsePageResult.chapterIndexes);
 
@@ -309,16 +310,18 @@ class _EpubViewState extends State<EpubView> {
 
     return posIndex;
   }
+
   int recalculateWordsPerPage() {
-    final defaultBuilder = widget.builders as EpubViewBuilders<DefaultBuilderOptions>;
+    final defaultBuilder =
+        widget.builders as EpubViewBuilders<DefaultBuilderOptions>;
     final options = defaultBuilder.options;
     // Recalculate the number of words per page based on the updated font size
-    double screenWidth = MediaQuery.of(context).size.width;
+    double screenWidth = MediaQuery.of(context).size.width - (2 * 16);
 
     // Create a TextPainter to measure the width of a single word
     final textPainter = TextPainter(
       text: TextSpan(
-        text: 'words',  // Use a sample word
+        text: 'words', // Use a sample word
         style: TextStyle(fontSize: options.textStyle.fontSize),
       ),
       textDirection: TextDirection.ltr,
@@ -328,17 +331,21 @@ class _EpubViewState extends State<EpubView> {
     textPainter.layout(maxWidth: screenWidth);
 
     // Calculate the number of words per line
-    double wordsPerLine = (screenWidth / textPainter.width).floor().toDouble();
+    double wordsPerLine =
+        (screenWidth / (options.textStyle.fontSize! * 2)).floor().toDouble();
     // Calculate the number of lines per page
-    double screenHeight = MediaQuery.of(context).size.height;
-    final hw = screenHeight/screenWidth;
-    linesPerPage = ((screenHeight / options.textStyle.fontSize!)/hw).floor().toDouble();
+    double screenHeight = MediaQuery.of(context).size.height - (2 * 16);
+    final hw = screenHeight / screenWidth;
+    linesPerPage =
+        ((screenHeight / (options.textStyle.fontSize! * 2))).floor().toDouble()-5;//5 tedade paragraph
+    // linesPerPage = 20;
 
     // Calculate the number of words per page
     final wordsPerPage = (wordsPerLine * linesPerPage).floor();
     final words = wordsPerPage;
     return words;
   }
+
   static Widget _chapterDividerBuilder(EpubChapter chapter) => Container(
         height: 56,
         width: double.infinity,
@@ -375,55 +382,71 @@ class _EpubViewState extends State<EpubView> {
       return Container();
     }
     String htmlData = '';
-    for(int i = 0; i< pages[index].elements.length; i++) {
-      htmlData = htmlData+ pages[index].elements[i].outerHtml;
+    var unescape = HtmlUnescape();
+    RegExp exp = RegExp(r"<[^>]*>", multiLine: true, caseSensitive: true);
+
+    for (int i = 0; i < pages[index].elements.length; i++) {
+      htmlData =
+          '$htmlData\n${pages[index].elements[i].outerHtml.replaceAll(exp, '')}';
     }
     final defaultBuilder = builders as EpubViewBuilders<DefaultBuilderOptions>;
     final options = defaultBuilder.options;
     // return HtmlWidget(lines[index].lineString);
-    return Container(
-      color: options.backgroundColor,
-      child: SelectionArea(
-        onSelectionChanged: (value) {
-          print('selected text: $value');
-        },
-        child: Directionality(
-          textDirection: TextDirection.rtl,
-          child: Html(
-            data: htmlData,
-            onLinkTap: (href, _, __) => onExternalLinkPressed(href!),
-            style: {
-              'html': Style(
-                padding: HtmlPaddings.only(
-                  top: (options.paragraphPadding as EdgeInsets?)?.top,
-                  right: (options.paragraphPadding as EdgeInsets?)?.right,
-                  bottom: (options.paragraphPadding as EdgeInsets?)?.bottom,
-                  left: (options.paragraphPadding as EdgeInsets?)?.left,
-                ),
-              ).merge(Style.fromTextStyle(options.textStyle)),
-            },
-            extensions: [
-              TagExtension(
-                tagsToExtend: {"img"},
-                builder: (imageContext) {
-                  final url =
-                      imageContext.attributes['src']!.replaceAll('../', '');
-                  final content = Uint8List.fromList(
-                      document.Content!.Images![url]!.Content!);
-                  return Image(
-                    image: MemoryImage(content),
-                  );
-                },
-              ),
-            ],
+    return SingleChildScrollView(
+      child: Container(
+        color: options.backgroundColor,
+        margin: EdgeInsetsDirectional.all(16),
+        child: SelectionArea(
+          onSelectionChanged: (value) {
+            print('selected text: $value');
+          },
+          child: Directionality(
+            textDirection: TextDirection.rtl,
+            child: Expanded(
+                child: Text(
+              htmlData,
+              textAlign: TextAlign.justify,
+              style:
+                  TextStyle(fontSize: options.textStyle.fontSize, height: 1.5, color: Colors.black),
+            )),
+            // Html(
+            //   data: htmlData,
+            //
+            //   onLinkTap: (href, _, __) => onExternalLinkPressed(href!),
+            //   style: {
+            //     'html': Style(
+            //       padding: HtmlPaddings.only(
+            //         top: (options.paragraphPadding as EdgeInsets?)?.top,
+            //         right: (options.paragraphPadding as EdgeInsets?)?.right,
+            //         bottom: (options.paragraphPadding as EdgeInsets?)?.bottom,
+            //         left: (options.paragraphPadding as EdgeInsets?)?.left,
+            //       ),
+            //     ).merge(Style.fromTextStyle(options.textStyle)),
+            //   },
+            //
+            //   extensions: [
+            //     TagExtension(
+            //       tagsToExtend: {"img"},
+            //       builder: (imageContext) {
+            //         final url =
+            //             imageContext.attributes['src']!.replaceAll('../', '');
+            //         final content = Uint8List.fromList(
+            //             document.Content!.Images![url]!.Content!);
+            //         return Image(
+            //           image: MemoryImage(content),
+            //         );
+            //       },
+            //     ),
+            //   ],
+            // ),
           ),
         ),
       ),
     );
-
   }
 
   num linesPerPage = 20;
+
   num calculateLinesPerPage() {
     final defaultBuilder =
         widget.builders as EpubViewBuilders<DefaultBuilderOptions>;

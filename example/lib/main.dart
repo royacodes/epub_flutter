@@ -101,27 +101,26 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(
-          title: EpubViewActualChapter(
-            controller: _epubReaderController,
-            builder: (chapterValue) => Text(
-              chapterValue?.chapter?.Title?.replaceAll('\n', '').trim() ?? '',
-              textAlign: TextAlign.start,
-            ),
-          ),
-          actions: <Widget>[
-            IconButton(
-              icon: const Icon(Icons.save_alt),
-              color: Colors.white,
-              onPressed: () => _showCurrentEpubCfi(context),
-            ),
-          ],
-        ),
-        drawer: Drawer(
-          child: EpubViewTableOfContents(controller: _epubReaderController),
-        ),
-        body:
-        EpubView(
+        // appBar: AppBar(
+        //   title: EpubViewActualChapter(
+        //     controller: _epubReaderController,
+        //     builder: (chapterValue) => Text(
+        //       chapterValue?.chapter?.Title?.replaceAll('\n', '').trim() ?? '',
+        //       textAlign: TextAlign.start,
+        //     ),
+        //   ),
+        //   actions: <Widget>[
+        //     IconButton(
+        //       icon: const Icon(Icons.save_alt),
+        //       color: Colors.white,
+        //       onPressed: () => _showCurrentEpubCfi(context),
+        //     ),
+        //   ],
+        // ),
+        // drawer: Drawer(
+        //   child: EpubViewTableOfContents(controller: _epubReaderController),
+        // ),
+        body: EpubView(
           builders: EpubViewBuilders<DefaultBuilderOptions>(
             options:
                 const DefaultBuilderOptions(textStyle: TextStyle(fontSize: 22)),
