@@ -81,8 +81,8 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     _epubReaderController = EpubController(
       document:
-          // EpubDocument.openAsset('assets/New-Findings-on-Shirdi-Sai-Baba.epub'),
-          EpubDocument.openAsset('assets/book-fa.epub'),
+          EpubDocument.openAsset('assets/New-Findings-on-Shirdi-Sai-Baba.epub'),
+          // EpubDocument.openAsset('assets/book-fa.epub'),
       // EpubDocument.openUrl('https://www.gutenberg.org/ebooks/11.epub.images'),
       // EpubDocument.openAsset('assets/New-Findings-on-Shirdi-Sai-Baba.epub'),
       // epubCfi:
@@ -123,7 +123,7 @@ class _MyHomePageState extends State<MyHomePage> {
         body: EpubView(
           builders: EpubViewBuilders<DefaultBuilderOptions>(
             options:
-                const DefaultBuilderOptions(textStyle: TextStyle(fontSize: 22)),
+                const DefaultBuilderOptions(textStyle: TextStyle(fontSize: 22),),
             chapterDividerBuilder: (_) => const Divider(),
           ),
           controller: _epubReaderController,
