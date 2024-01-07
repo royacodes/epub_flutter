@@ -8,6 +8,7 @@ import 'package:epub_flutter/src/data/epub_parser.dart';
 import 'package:epub_flutter/src/data/models/chapter.dart';
 import 'package:epub_flutter/src/data/models/chapter_view_value.dart';
 import 'package:epub_flutter/src/data/models/paragraph.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:html_unescape/html_unescape.dart';
@@ -395,52 +396,64 @@ class _EpubViewState extends State<EpubView> {
     return SingleChildScrollView(
       child: Container(
         color: options.backgroundColor,
-        margin: EdgeInsetsDirectional.all(16),
-        child: SelectionArea(
-          onSelectionChanged: (value) {
-            print('selected text: $value');
+        margin: const EdgeInsetsDirectional.all(16),
+        child: SelectableText(
+                  htmlData,
+                  textAlign: TextAlign.justify,
+                  textDirection: TextDirection.ltr,
+                  style:
+          TextStyle(fontSize: options.textStyle.fontSize, height: 1.5, color: Colors.black,),
+          onSelectionChanged: (TextSelection selection, SelectionChangedCause? cause) {
+
           },
-          child: Directionality(
-            textDirection: TextDirection.rtl,
-            child: Expanded(
-                child: Text(
-              htmlData,
-              textAlign: TextAlign.justify,
-              style:
-                  TextStyle(fontSize: options.textStyle.fontSize, height: 1.5, color: Colors.black),
-            )),
-            // Html(
-            //   data: htmlData,
-            //
-            //   onLinkTap: (href, _, __) => onExternalLinkPressed(href!),
-            //   style: {
-            //     'html': Style(
-            //       padding: HtmlPaddings.only(
-            //         top: (options.paragraphPadding as EdgeInsets?)?.top,
-            //         right: (options.paragraphPadding as EdgeInsets?)?.right,
-            //         bottom: (options.paragraphPadding as EdgeInsets?)?.bottom,
-            //         left: (options.paragraphPadding as EdgeInsets?)?.left,
-            //       ),
-            //     ).merge(Style.fromTextStyle(options.textStyle)),
-            //   },
-            //
-            //   extensions: [
-            //     TagExtension(
-            //       tagsToExtend: {"img"},
-            //       builder: (imageContext) {
-            //         final url =
-            //             imageContext.attributes['src']!.replaceAll('../', '');
-            //         final content = Uint8List.fromList(
-            //             document.Content!.Images![url]!.Content!);
-            //         return Image(
-            //           image: MemoryImage(content),
-            //         );
-            //       },
-            //     ),
-            //   ],
-            // ),
-          ),
-        ),
+          contextMenuBuilder: ( BuildContext context,
+              EditableTextState editableTextState) {
+                    return AdaptiveTextSelectionToolbar(
+                      anchors: editableTextState.contextMenuAnchors,
+                      children: [
+                      Container(width: 200,
+                      padding: const EdgeInsetsDirectional.symmetric(vertical: 8),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          Container(
+                            height: 40,
+                            width: 40,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.pink,
+                            ),
+                          ),
+                          Container(
+                            height: 40,
+                            width: 40,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.blue,
+                            ),
+                          ),
+                          Container(
+                            height: 40,
+                            width: 40,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.green,
+                            ),
+                          ),
+                          Container(
+                            height: 40,
+                            width: 40,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.amber,
+                            ),
+                          ),
+                        ],
+                      ),),
+
+                    ], );
+          },
+                ),
       ),
     );
   }
